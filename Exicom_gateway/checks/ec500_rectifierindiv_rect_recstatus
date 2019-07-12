@@ -1,0 +1,79 @@
+#!/usr/bin/python
+"""
+recStatus of poller device.
+
+This is part of device application.
+Poller script determines the recStatus of device.
+poller script takes the snmp value of OID .1.3.6.1.4.1.38016.14.2.8.6.1.4 from snmp agent of device at specific interval.
+Device recStatus is sent to device application
+
+"""
+# ######################################################################
+# Function: check_ec500_rectifierindiv_rect_recstatus
+#
+# Parameters: info (SNMP Ouput) params (No Parameters)
+#
+# Output: device rectifierindiv_recstatus
+# ######################################################################
+ec500_rectifierindiv_rect_recstatus_default_levels = ()
+
+def check_ec500_rectifierindiv_rect_recstatus(item, params, info):
+    """
+            check_ec500_rectifierindiv_rect_recstatus function fetches the recStatus
+
+            Args:
+                    item (str) Specific item on SNMP output on which we want to filter results
+
+            Kwargs:
+                    params (tuple) Check parameters for critical and warning state of service
+
+            Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+                                        3: unknown
+                        infotext(string):
+                                    plugin output
+                                    Example : OK - ;;;;
+
+                        Raises:
+                               Exception
+    """
+    state = 3
+    infotext = "unknown_value"
+    index = 0
+    perfdata = []
+    ec500_rectifierindiv_rect_recstatus = None
+    try:
+        #print info
+        for line in info:
+            index= index + 1
+            ec500_rectifierindiv_rect_recstatus = line[0]
+            #print rec_share_value 
+            try:
+                ec500_rectifierindiv_rect_recstatus = float(ec500_rectifierindiv_rect_recstatus)
+            except Exception,e:
+                ec500_rectifierindiv_rect_recstatus = line[0].replace(' ','@')
+            state = 0
+            perfdata.append(("ec500_rectifierindiv_rect_%d_recstatus" %index,ec500_rectifierindiv_rect_recstatus))
+            infotext = "ec500_rectifierindiv_rect_recstatus=%s" % ec500_rectifierindiv_rect_recstatus
+    except Exception,e:
+        infotext = "unknown_value"
+    return (state,infotext,perfdata)
+
+
+# This check works on all SNMP hosts
+"""
+    Dictionary-based declaration of all check types
+"""
+check_info["ec500_rectifierindiv_rect_recstatus"] = {
+    'check_function':          check_ec500_rectifierindiv_rect_recstatus,
+    'service_description':     'ec500_rectifierindiv_rect_recstatus',
+    'has_perfdata':		True,
+}
+
+#########################################################################
+#	SNMP OID for the device recStatus
+#########################################################################
+snmp_info["ec500_rectifierindiv_rect_recstatus"] = ('.1.3.6.1.4.1.38016.14.2.8.6', ['1.4'])

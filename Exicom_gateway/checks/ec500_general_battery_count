@@ -1,0 +1,74 @@
+#!/usr/bin/python
+"""
+battery_count of poller device.
+
+This is part of device application.
+Poller script determines the battery_count of device.
+poller script takes the snmp value of OID .1.3.6.1.4.1.38016.14.2.11.1.10 from snmp agent of device at specific interval.
+Device battery_count is sent to device application
+
+"""
+# ######################################################################
+# Function: check_ec500_general_battery_count
+#
+# Parameters: info (SNMP Ouput) params (No Parameters)
+#
+# Output: device general_battery_count
+# ######################################################################
+ec500_general_battery_count_default_levels = ()
+
+def check_ec500_general_battery_count(item, params, info):
+    """
+            check_ec500_general_battery_count function fetches the battery_count
+
+            Args:
+                    item (str) Specific item on SNMP output on which we want to filter results
+
+            Kwargs:
+                    params (tuple) Check parameters for critical and warning state of service
+
+            Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+                                        3: unknown
+                        infotext(string):
+                                    plugin output
+                                    Example : OK - ;;;;
+
+                        Raises:
+                               Exception
+    """
+    state = 3
+    infotext = "unknown_value"
+    perf_data = ['']
+    if info:
+        try:
+            state = 0
+            try :
+                ec500_general_battery_count = float(info[0][0])
+            except Exception,e:
+                ec500_general_battery_count = str(info[0][0].replace(" ","@"))
+            perf_data = [("ec500_general_battery_count", ec500_general_battery_count)]
+            return (state, "ec500_general_battery_count=%s" % ec500_general_battery_count, perf_data)
+        except Exception,e:
+            return (3, "ec500_general_battery_count=%s" % infotext.replace(" ","@"), perf_data)
+    else:
+        return (state, "ec500_general_battery_count=%s" %"No data retrieved".replace(" ","@"), perf_data)
+
+
+# This check works on all SNMP hosts
+"""
+    Dictionary-based declaration of all check types
+"""
+check_info["ec500_general_battery_count"] = {
+    'check_function':          check_ec500_general_battery_count,
+    'service_description':     'ec500_general_battery_count',
+    'has_perfdata':		True,
+}
+
+#########################################################################
+#	SNMP OID for the device battery_count
+#########################################################################
+snmp_info["ec500_general_battery_count"] = ('.1.3.6.1.4.1.38016.14.2.11', ['1.0'])

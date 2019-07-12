@@ -1,0 +1,77 @@
+#!/usr/bin/python
+"""
+rectifierSrNumber of poller device.
+
+This is part of device application.
+Poller script determines the rectifierSrNumber of device.
+poller script takes the snmp value of OID .1.3.6.1.4.1.38016.14.9.1.2.1.3 from snmp agent of device at specific interval.
+Device rectifierSrNumber is sent to device application
+
+"""
+# ######################################################################
+# Function: check_m2000_inventory_rect_srno_invent
+#
+# Parameters: info (SNMP Ouput) params (No Parameters)
+#
+# Output: device inventory_rect_srno
+# ######################################################################
+m2000_inventory_rect_srno_default_levels = ()
+
+def check_m2000_inventory_rect_srno_invent(item, params, info):
+    """
+            check_m2000_inventory_rect_srno_invent function fetches the rectifierSrNumber
+
+            Args:
+                    item (str) Specific item on SNMP output on which we want to filter results
+
+            Kwargs:
+                    params (tuple) Check parameters for critical and warning state of service
+
+            Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+                                        3: unknown
+                        infotext(string):
+                                    plugin output
+                                    Example : OK - ;;;;
+
+                        Raises:
+                               Exception
+    """
+    state = 3
+    infotext = "unknown_value"
+    perf_data = ['']
+    try:
+        state = 0
+        for line in info:
+            index= index + 1
+            m2000_inventory_rect_srno  = line[0]
+            try :
+                m2000_inventory_rect_srno = float(info[0][0])
+            except Exception,e:
+                m2000_inventory_rect_srno = str(info[0][0].replace(" ","@"))
+            perf_data.append(("m2000_inventory_rect_srno" ,m2000_inventory_rect_srno))
+            infotext = "m2000_inventory_rect_srno" % m2000_inventory_rect_srno
+    except Exception,e:
+        infotext = "unknown_value"
+    return (state,infotext,perf_data)
+
+
+
+
+# This check works on all SNMP hosts
+"""
+    Dictionary-based declaration of all check types
+"""
+check_info["m2000_inventory_rect_srno_invent"] = {
+    'check_function':          check_m2000_inventory_rect_srno_invent,
+    'service_description':     'm2000_inventory_rect_srno_invent',
+    'has_perfdata':		True,
+}
+
+#########################################################################
+#	SNMP OID for the device rectifierSrNumber
+#########################################################################
+snmp_info["m2000_inventory_rect_srno_invent"] = ('.1.3.6.1.4.1.38016.14.9.1.2', ['1.3.0'])

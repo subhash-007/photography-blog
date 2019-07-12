@@ -1,0 +1,79 @@
+#!/usr/bin/python
+"""
+recLine1Frequency of poller device.
+
+This is part of device application.
+Poller script determines the recLine1Frequency of device.
+poller script takes the snmp value of OID .1.3.6.1.4.1.38016.14.2.8.6.1.13 from snmp agent of device at specific interval.
+Device recLine1Frequency is sent to device application
+
+"""
+# ######################################################################
+# Function: check_ec500_rectifierindiv_recline1_input_frequency
+#
+# Parameters: info (SNMP Ouput) params (No Parameters)
+#
+# Output: device rectifierindiv_recline1_input_frequency
+# ######################################################################
+ec500_rectifierindiv_recline1_input_frequency_default_levels = ()
+
+def check_ec500_rectifierindiv_recline1_input_frequency(item, params, info):
+    """
+            check_ec500_rectifierindiv_recline1_input_frequency function fetches the recLine1Frequency
+
+            Args:
+                    item (str) Specific item on SNMP output on which we want to filter results
+
+            Kwargs:
+                    params (tuple) Check parameters for critical and warning state of service
+
+            Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+                                        3: unknown
+                        infotext(string):
+                                    plugin output
+                                    Example : OK - ;;;;
+
+                        Raises:
+                               Exception
+    """
+    state = 3
+    infotext = "unknown_value"
+    index = 0
+    perfdata = []
+    ec500_rectifierindiv_recline1_input_frequency = None
+    try:
+        #print info
+        for line in info:
+            index= index + 1
+            ec500_rectifierindiv_recline1_input_frequency = line[0]
+            #print rec_share_value 
+            try:
+                ec500_rectifierindiv_recline1_input_frequency = float(ec500_rectifierindiv_recline1_input_frequency)
+            except Exception,e:
+                ec500_rectifierindiv_recline1_input_frequency = line[0].replace(' ','@')
+            state = 0
+            perfdata.append(("ec500_rectifierindiv_recline1_input_%d_frequency" %index,ec500_rectifierindiv_recline1_input_frequency))
+            infotext = "ec500_rectifierindiv_recline1_input_frequency=%s" % ec500_rectifierindiv_recline1_input_frequency
+    except Exception,e:
+        infotext = "unknown_value"
+    return (state,infotext,perfdata)
+
+
+# This check works on all SNMP hosts
+"""
+    Dictionary-based declaration of all check types
+"""
+check_info["ec500_rectifierindiv_recline1_input_frequency"] = {
+    'check_function':          check_ec500_rectifierindiv_recline1_input_frequency,
+    'service_description':     'ec500_rectifierindiv_recline1_input_frequency',
+    'has_perfdata':		True,
+}
+
+#########################################################################
+#	SNMP OID for the device recLine1Frequency
+#########################################################################
+snmp_info["ec500_rectifierindiv_recline1_input_frequency"] = ('.1.3.6.1.4.1.38016.14.2.8.6', ['1.13'])

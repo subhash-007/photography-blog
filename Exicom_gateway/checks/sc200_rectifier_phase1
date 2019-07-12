@@ -1,0 +1,128 @@
+#!/usr/bin/python
+try:
+	import nocout_settings
+	from nocout_settings import _DATABASES, _LIVESTATUS
+except Exception as exp:
+	print exp
+import binascii
+"""
+vlan Poller script.
+This is part of device application. 
+Poller script determines the vlan. 
+poller script takes the snmp value of OID .1.3.6.1.4.1.1918.2.13.10.60.30.1.180 from snmp agent of device at specific interval.
+all ports status are sent to device application 
+"""
+# ######################################################################
+# Function : check_sc200_rectifier_phase2
+#
+# Parameters: info (SNMP Output) _no_params(No Parameters)
+#
+# Output: service state and plugin output
+# #####################################################################
+#A = [OID_END]#['1.180']
+#get_max_rectifier(ttpl_hostname)
+def get_from_socket(ip=None,port=None ,query=None,site=None):
+        """
+   	 Function_name : get_from_socket (collect the query data from the socket)
+
+    	Args: site_name (poller on which monitoring data is to be collected)
+
+    	Kwargs: query (query for which data to be collectes from nagios.)
+
+    	Return : None
+
+    	raise 
+         	Exception: SyntaxError,socket error 
+	"""
+	if site:
+    		s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+		path = "/omd/sites/%s/tmp/run/live" % (site)
+    		s.connect(path)
+    	else:
+    		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    	s.connect((ip,port))
+	
+    	s.send(query)
+    	s.shutdown(socket.SHUT_WR)
+    	output = s.recv(100000000)
+    	output.strip("\n")
+    	return output
+
+
+def get_max_rectifier(host):
+	rectifier_number = 0
+    	try:
+		if host:
+			query_string = "GET services\nColumns: plugin_output\nFilter: " + \
+                       		"service_description = %s\nFilter: host_name = %s\nOutputFormat: python\n" % ("sc200_number_of_registered_rectifiers",host)
+			site = "ospf1_slave_1"
+                       	machine_name = site.split('_')[0]
+                       	socket_ip = _LIVESTATUS[machine_name]['host']
+                       	socket_port = _LIVESTATUS[machine_name][site]['port']
+
+       			query_output = eval(get_from_socket(ip=socket_ip,port=socket_port,query=query_string).strip())
+			#query_output = [[u'OK - sc200_number_of_registered_rectifiers=2.0']]
+			if query_output[0][0]:
+				rectifier_number = int(round(float(query_output[0][0].split("=")[1])))
+	except Exception,e :
+		pass
+		#print "error",e
+	return rectifier_number
+#A =  get_max_rectifier(ttpl_hostname)
+#B = [str(i) for i in range(1, A+1)]
+A =  get_max_rectifier(ttpl_hostname) if get_max_rectifier(ttpl_hostname) else 1
+B = [str(i) for i in range(1, A+1)]
+
+def check_sc200_rectifier_phase1(item, _no_params, info):
+    """
+                check_sc200_rectifier_phase2
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+                    3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : OK - vlan=1;;;;
+
+                        Raises:
+                               Exception
+    """
+    state = 3
+    infotext = "unknown_value"
+    phase2 = None
+    index =0
+    perfdata = []
+    try:
+	for line in info[0]:
+	    index= index + 1
+	    phase2 = line[0]
+	    try:
+		phase2 = float(phase2)
+	    except Exception,e:
+		phase2 = line[0].replace(' ','@')
+	    state = 0
+	    perfdata.append(("rectifier_%d_phase1" %index, phase2))
+	    infotext = "sc200_rectifier_phase1=%s" % phase2
+    except Exception,e:
+	infotext = "unknown_value"
+    return (state,infotext,perfdata)
+
+
+check_info["sc200_rectifier_phase1"] = {
+    'check_function':          check_sc200_rectifier_phase1,
+    'service_description':     'sc200_rectifier_phase1',
+    'has_perfdata':         True,
+    'snmp_info':               ('.1.3.6.1.4.1.1918.2.13.10.60.30.1.170',B), #['1.180','1.120']),
+    'snmp_scan_function':      lambda oid: "sc200" in oid(".1.3.6.1.4.1.38016.14.1.1.0").lower(),
+}
+
+

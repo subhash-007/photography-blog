@@ -1,0 +1,74 @@
+#!/usr/bin/python
+"""
+dcifInstallationDate of poller device.
+
+This is part of device application.
+Poller script determines the dcifInstallationDate of device.
+poller script takes the snmp value of OID .1.3.6.1.4.1.38016.14.9.6.2.1.2 from snmp agent of device at specific interval.
+Device dcifInstallationDate is sent to device application
+
+"""
+# ######################################################################
+# Function: check_ec500_inventory_dcif_install_date_invent
+#
+# Parameters: info (SNMP Ouput) params (No Parameters)
+#
+# Output: device inventory_dcif_install_date
+# ######################################################################
+ec500_inventory_dcif_install_date_default_levels = ()
+
+def check_ec500_inventory_dcif_install_date_invent(item, params, info):
+    """
+            check_ec500_inventory_dcif_install_date_invent function fetches the dcifInstallationDate
+
+            Args:
+                    item (str) Specific item on SNMP output on which we want to filter results
+
+            Kwargs:
+                    params (tuple) Check parameters for critical and warning state of service
+
+            Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+                                        3: unknown
+                        infotext(string):
+                                    plugin output
+                                    Example : OK - ;;;;
+
+                        Raises:
+                               Exception
+    """
+    state = 3
+    infotext = "unknown_value"
+    perf_data = ['']
+    if info:
+        try:
+            state = 0
+            try :
+                ec500_inventory_dcif_install_date = float(info[0][0])
+            except Exception,e:
+                ec500_inventory_dcif_install_date = str(info[0][0].replace(" ","@"))
+            perf_data = [("ec500_inventory_dcif_install_date", ec500_inventory_dcif_install_date)]
+            return (state, "ec500_inventory_dcif_install_date=%s" % ec500_inventory_dcif_install_date, perf_data)
+        except Exception,e:
+            return (3, "ec500_inventory_dcif_install_date=%s" % infotext.replace(" ","@"), perf_data)
+    else:
+        return (state, "ec500_inventory_dcif_install_date=%s" %"No data retrieved".replace(" ","@"), perf_data)
+
+
+# This check works on all SNMP hosts
+"""
+    Dictionary-based declaration of all check types
+"""
+check_info["ec500_inventory_dcif_install_date_invent"] = {
+    'check_function':          check_ec500_inventory_dcif_install_date_invent,
+    'service_description':     'ec500_inventory_dcif_install_date_invent',
+    'has_perfdata':		True,
+}
+
+#########################################################################
+#	SNMP OID for the device dcifInstallationDate
+#########################################################################
+snmp_info["ec500_inventory_dcif_install_date_invent"] = ('.1.3.6.1.4.1.38016.14.9.6.2', ['1.2'])

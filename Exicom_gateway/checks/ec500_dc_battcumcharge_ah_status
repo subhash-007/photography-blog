@@ -1,0 +1,74 @@
+#!/usr/bin/python
+"""
+dc_battcumcharge_ah_status of poller device.
+
+This is part of device application.
+Poller script determines the dc_battcumcharge_ah_status of device.
+poller script takes the snmp value of OID .1.3.6.1.4.1.38016.14.2.10.2 from snmp agent of device at specific interval.
+Device dc_battcumcharge_ah_status is sent to device application
+
+"""
+# ######################################################################
+# Function: check_ec500_dc_battcumcharge_ah_status
+#
+# Parameters: info (SNMP Ouput) params (No Parameters)
+#
+# Output: device dc_battcumcharge_ah
+# ######################################################################
+ec500_dc_battcumcharge_ah_default_levels = ()
+
+def check_ec500_dc_battcumcharge_ah_status(item, params, info):
+    """
+            check_ec500_dc_battcumcharge_ah_status function fetches the dc_battcumcharge_ah_status
+
+            Args:
+                    item (str) Specific item on SNMP output on which we want to filter results
+
+            Kwargs:
+                    params (tuple) Check parameters for critical and warning state of service
+
+            Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+                                        3: unknown
+                        infotext(string):
+                                    plugin output
+                                    Example : OK - ;;;;
+
+                        Raises:
+                               Exception
+    """
+    state = 3
+    infotext = "unknown_value"
+    perf_data = ['']
+    if info:
+        try:
+            state = 0
+            try :
+                ec500_dc_battcumcharge_ah = float(info[0][0])
+            except Exception,e:
+                ec500_dc_battcumcharge_ah = str(info[0][0].replace(" ","@"))
+            perf_data = [("ec500_dc_battcumcharge_ah", ec500_dc_battcumcharge_ah)]
+            return (state, "ec500_dc_battcumcharge_ah=%s" % ec500_dc_battcumcharge_ah, perf_data)
+        except Exception,e:
+            return (3, "ec500_dc_battcumcharge_ah=%s" % infotext.replace(" ","@"), perf_data)
+    else:
+        return (state, "ec500_dc_battcumcharge_ah=%s" %"No data retrieved".replace(" ","@"), perf_data)
+
+
+# This check works on all SNMP hosts
+"""
+    Dictionary-based declaration of all check types
+"""
+check_info["ec500_dc_battcumcharge_ah_status"] = {
+    'check_function':          check_ec500_dc_battcumcharge_ah_status,
+    'service_description':     'ec500_dc_battcumcharge_ah_status',
+    'has_perfdata':		True,
+}
+
+#########################################################################
+#	SNMP OID for the device dc_battcumcharge_ah_status
+#########################################################################
+snmp_info["ec500_dc_battcumcharge_ah_status"] = ('.1.3.6.1.4.1.38016.14.2', ['10.2'])

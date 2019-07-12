@@ -1,0 +1,74 @@
+#!/usr/bin/python
+"""
+sEBEnergy of poller device.
+
+This is part of device application.
+Poller script determines the sEBEnergy of device.
+poller script takes the snmp value of OID .1.3.6.1.4.1.38016.14.19.9 from snmp agent of device at specific interval.
+Device sEBEnergy is sent to device application
+
+"""
+# ######################################################################
+# Function: check_ec500_ac_energy_seb_status
+#
+# Parameters: info (SNMP Ouput) params (No Parameters)
+#
+# Output: device ac_energy_seb
+# ######################################################################
+ec500_ac_energy_seb_default_levels = ()
+
+def check_ec500_ac_energy_seb_status(item, params, info):
+    """
+            check_ec500_ac_energy_seb_status function fetches the sEBEnergy
+
+            Args:
+                    item (str) Specific item on SNMP output on which we want to filter results
+
+            Kwargs:
+                    params (tuple) Check parameters for critical and warning state of service
+
+            Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+                                        3: unknown
+                        infotext(string):
+                                    plugin output
+                                    Example : OK - ;;;;
+
+                        Raises:
+                               Exception
+    """
+    state = 3
+    infotext = "unknown_value"
+    perf_data = ['']
+    if info:
+        try:
+            state = 0
+            try :
+                ec500_ac_energy_seb = float(info[0][0])
+            except Exception,e:
+                ec500_ac_energy_seb = str(info[0][0].replace(" ","@"))
+            perf_data = [("ec500_ac_energy_seb", ec500_ac_energy_seb)]
+            return (state, "ec500_ac_energy_seb=%s" % ec500_ac_energy_seb, perf_data)
+        except Exception,e:
+            return (3, "ec500_ac_energy_seb=%s" % infotext.replace(" ","@"), perf_data)
+    else:
+        return (state, "ec500_ac_energy_seb=%s" %"No data retrieved".replace(" ","@"), perf_data)
+
+
+# This check works on all SNMP hosts
+"""
+    Dictionary-based declaration of all check types
+"""
+check_info["ec500_ac_energy_seb_status"] = {
+    'check_function':          check_ec500_ac_energy_seb_status,
+    'service_description':     'ec500_ac_energy_seb_status',
+    'has_perfdata':		True,
+}
+
+#########################################################################
+#	SNMP OID for the device sEBEnergy
+#########################################################################
+snmp_info["ec500_ac_energy_seb_status"] = ('.1.3.6.1.4.1.38016.14', ['19.9'])

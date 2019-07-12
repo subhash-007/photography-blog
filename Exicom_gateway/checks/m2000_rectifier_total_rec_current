@@ -1,0 +1,74 @@
+#!/usr/bin/python
+"""
+rectifier_total_rec_current of poller device.
+
+This is part of device application.
+Poller script determines the rectifier_total_rec_current of device.
+poller script takes the snmp value of OID .1.3.6.1.4.1.38016.14.2.8.3 from snmp agent of device at specific interval.
+Device rectifier_total_rec_current is sent to device application
+
+"""
+# ######################################################################
+# Function: check_m2000_rectifier_total_rec_current
+#
+# Parameters: info (SNMP Ouput) params (No Parameters)
+#
+# Output: device rectifier_total_rec_current
+# ######################################################################
+m2000_rectifier_total_rec_current_default_levels = ()
+
+def check_m2000_rectifier_total_rec_current(item, params, info):
+    """
+            check_m2000_rectifier_total_rec_current function fetches the rectifier_total_rec_current
+
+            Args:
+                    item (str) Specific item on SNMP output on which we want to filter results
+
+            Kwargs:
+                    params (tuple) Check parameters for critical and warning state of service
+
+            Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+                                        3: unknown
+                        infotext(string):
+                                    plugin output
+                                    Example : OK - ;;;;
+
+                        Raises:
+                               Exception
+    """
+    state = 3
+    infotext = "unknown_value"
+    perf_data = ['']
+    if info:
+        try:
+            state = 0
+            try :
+                m2000_rectifier_total_rec_current = float(info[0][0])
+            except Exception,e:
+                m2000_rectifier_total_rec_current = str(info[0][0].replace(" ","@"))
+            perf_data = [("m2000_rectifier_total_rec_current", m2000_rectifier_total_rec_current)]
+            return (state, "m2000_rectifier_total_rec_current=%s" % m2000_rectifier_total_rec_current, perf_data)
+        except Exception,e:
+            return (3, "m2000_rectifier_total_rec_current=%s" % infotext.replace(" ","@"), perf_data)
+    else:
+        return (state, "m2000_rectifier_total_rec_current=%s" %"No data retrieved".replace(" ","@"), perf_data)
+
+
+# This check works on all SNMP hosts
+"""
+    Dictionary-based declaration of all check types
+"""
+check_info["m2000_rectifier_total_rec_current"] = {
+    'check_function':          check_m2000_rectifier_total_rec_current,
+    'service_description':     'm2000_rectifier_total_rec_current',
+    'has_perfdata':		True,
+}
+
+#########################################################################
+#	SNMP OID for the device rectifier_total_rec_current
+#########################################################################
+snmp_info["m2000_rectifier_total_rec_current"] = ('.1.3.6.1.4.1.38016.14.2', ['8.3'])

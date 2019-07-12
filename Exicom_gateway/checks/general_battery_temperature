@@ -1,0 +1,68 @@
+#!/usr/bin/python
+import binascii
+"""
+vlan Poller script.
+This is part of device application. 
+Poller script determines the vlan. 
+poller script takes the snmp value of OID .1.3.6.1.4.1.161.19.3.2.1.55.0 from snmp agent of device at specific interval.
+all ports status are sent to device application 
+"""
+# ######################################################################
+# Function : check_ac_energy_phase1_voltage
+#
+# Parameters: info (SNMP Output) _no_params(No Parameters)
+#
+# Output: service state and plugin output
+# #####################################################################
+
+
+def check_general_battery_temperature(item, _no_params, info):
+    """
+                ac_energy_phase1_voltage function calculates vlan
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+                    3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : OK - vlan=1;;;;
+
+                        Raises:
+                               Exception
+    """
+    state = 3
+    infotext = "unknown_value"
+    battery_temperature = None
+    try:
+        if info:
+            if info[0][0]:
+		try:
+                    battery_temperature = float(info[0][0])
+                except Exception,e:
+                    battery_temperature = info[0][0]
+                state = 0
+                infotext = "battery_temperature=%s" % battery_temperature
+    except Exception,e:
+        infotext = "unknown_value"
+    return (state,infotext,[("battery_temperature",battery_temperature)])
+
+# This check works on all SNMP hosts
+
+check_info["general_battery_temperature"] = {
+    'check_function':          check_general_battery_temperature,
+    'service_description':     'general_battery_temperature',
+    'snmp_info':               ('.1.3.6.1.4.1.38016.14.2.11', ['3.0']),
+    'snmp_scan_function':      lambda oid: "m1000" in oid(".1.3.6.1.4.1.38016.14.1.1.0").lower(),
+    'has_perfdata': True,
+}
+
+

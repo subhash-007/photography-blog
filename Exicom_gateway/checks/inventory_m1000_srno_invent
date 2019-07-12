@@ -1,0 +1,62 @@
+#!/usr/bin/python
+import binascii
+"""
+vlan Poller script.
+This is part of device application. 
+Poller script determines the vlan. 
+poller script takes the snmp value of OID .1.3.6.1.4.1.161.19.3.2.1.55.0 from snmp agent of device at specific interval.
+all ports status are sent to device application 
+"""
+# ######################################################################
+# Function : check_exicom_model_no_invent
+#
+# Parameters: info (SNMP Output) _no_params(No Parameters)
+#
+# Output: service state and plugin output
+# #####################################################################
+
+def check_inventory_m1000_srno_invent(item, _no_params, info):
+    """
+                check_exicom_model_no_invent function calculates vlan
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+                    3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : OK - vlan=1;;;;
+
+                        Raises:
+                               Exception
+    """
+    state = 3
+    infotext = "unknown_value"
+    serial_no =None
+    try:
+        if info:
+            if info[0][0]:
+                serial_no = info[0][0]
+                state = 0
+                infotext = "m1000_serial_number=%s" % serial_no
+    except Exception,e:
+        infotext = "m1000_serial_number=unknown_value"
+    return (state,infotext,[("m1000_serial_number",serial_no)])
+
+
+check_info["inventory_m1000_srno_invent"] = {
+    'check_function':          check_inventory_m1000_srno_invent,
+    'service_description':     'inventory_m1000_srno_invent',
+    'has_perfdata':         True,
+    'snmp_info':               ('.1.3.6.1.4.1.38016.14.9.3.2', ['1.3']),
+    'snmp_scan_function':      lambda oid: "m1000" in oid(".1.3.6.1.4.1.38016.14.1.1.0").lower(),
+}
+

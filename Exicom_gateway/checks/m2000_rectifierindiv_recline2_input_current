@@ -1,0 +1,79 @@
+#!/usr/bin/python
+"""
+rectifierLine2InputCurrent of poller device.
+
+This is part of device application.
+Poller script determines the rectifierLine2InputCurrent of device.
+poller script takes the snmp value of OID .1.3.6.1.4.1.38016.14.2.8.6.1.11 from snmp agent of device at specific interval.
+Device rectifierLine2InputCurrent is sent to device application
+
+"""
+# ######################################################################
+# Function: check_m2000_rectifierindiv_recline2_input_current
+#
+# Parameters: info (SNMP Ouput) params (No Parameters)
+#
+# Output: device rectifierindiv_recline2_input_current
+# ######################################################################
+m2000_rectifierindiv_recline2_input_current_default_levels = ()
+
+def check_m2000_rectifierindiv_recline2_input_current(item, params, info):
+    """
+            check_m2000_rectifierindiv_recline2_input_current function fetches the rectifierLine2InputCurrent
+
+            Args:
+                    item (str) Specific item on SNMP output on which we want to filter results
+
+            Kwargs:
+                    params (tuple) Check parameters for critical and warning state of service
+
+            Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+                                        3: unknown
+                        infotext(string):
+                                    plugin output
+                                    Example : OK - ;;;;
+
+                        Raises:
+                               Exception
+    """
+    state = 3
+    infotext = "unknown_value"
+    index = 0
+    perfdata = []
+    m2000_rectifierindiv_recline2_input_current = None
+    try:
+        #print info
+        for line in info:
+            index= index + 1
+            m2000_rectifierindiv_recline2_input_current = line[0]
+            #print rec_share_value 
+            try:
+                m2000_rectifierindiv_recline2_input_current = float(m2000_rectifierindiv_recline2_input_current)
+            except Exception,e:
+                m2000_rectifierindiv_recline2_input_current = line[0].replace(' ','@')
+            state = 0
+            perfdata.append(("m2000_rectifierindiv_recline2_input_%d_current" %index,m2000_rectifierindiv_recline2_input_current))
+            infotext = "m2000_rectifierindiv_recline2_input_current=%s" % m2000_rectifierindiv_recline2_input_current
+    except Exception,e:
+        infotext = "unknown_value"
+    return (state,infotext,perfdata)
+
+
+# This check works on all SNMP hosts
+"""
+    Dictionary-based declaration of all check types
+"""
+check_info["m2000_rectifierindiv_recline2_input_current"] = {
+    'check_function':          check_m2000_rectifierindiv_recline2_input_current,
+    'service_description':     'm2000_rectifierindiv_recline2_input_current',
+    'has_perfdata':		True,
+}
+
+#########################################################################
+#	SNMP OID for the device rectifierLine2InputCurrent
+#########################################################################
+snmp_info["m2000_rectifierindiv_recline2_input_current"] = ('.1.3.6.1.4.1.38016.14.2.8.6', ['1.11'])

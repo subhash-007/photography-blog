@@ -1,0 +1,70 @@
+#!/usr/bin/python
+import binascii
+"""
+vlan Poller script.
+This is part of device application. 
+Poller script determines the vlan. 
+poller script takes the snmp value of OID .1.3.6.1.4.1.1918.2.13.10.10.120 from snmp agent of device at specific interval.
+all ports status are sent to device application 
+"""
+# ######################################################################
+# Function : check_sc200_is_three_phase_system_invent
+#
+# Parameters: info (SNMP Output) _no_params(No Parameters)
+#
+# Output: service state and plugin output
+# #####################################################################
+
+def check_sc200_is_three_phase_system_invent(item, _no_params, info):
+    """
+                check_sc200_is_three_phase_system_invent function calculates vlan
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+                    3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : OK - vlan=1;;;;
+
+                        Raises:
+                               Exception
+    """
+    state = 3
+    infotext = "unknown_value"
+    sc200_is_three_phase_system =None
+    try:
+        if info:
+            if info[0][0]:
+                sc200_is_three_phase_system = info[0][0]
+            try:
+                sc200_is_three_phase_system = float(sc200_is_three_phase_system)
+            except Exception,e:
+                sc200_is_three_phase_system = info[0][0].replace(' ','@')
+            state = 0
+	    if int(sc200_is_three_phase_system) == 0:
+		sc200_is_three_phase_system = "false"
+	    elif int(sc200_is_three_phase_system) == 1:
+                sc200_is_three_phase_system = "true"
+            infotext = "sc200_is_three_phase_system=%s" % sc200_is_three_phase_system
+    except Exception,e:
+        infotext = "unknown_value"
+    return (state,infotext,[("sc200_is_three_phase_system",sc200_is_three_phase_system)])
+
+
+check_info["sc200_is_three_phase_system_invent"] = {
+    'check_function':          check_sc200_is_three_phase_system_invent,
+    'service_description':     'sc200_is_three_phase_system_invent',
+    'has_perfdata':         True,
+    'snmp_info':               ('.1.3.6.1.4.1.1918.2.13.10',['10.120']),
+    'snmp_scan_function':      lambda oid: "sc200" in oid(".1.3.6.1.4.1.38016.14.1.1.0").lower(),
+}
+

@@ -1,0 +1,77 @@
+#!/usr/bin/python
+"""
+solarHVLVversion of poller device.
+
+This is part of device application.
+Poller script determines the solarHVLVversion of device.
+poller script takes the snmp value of OID .1.3.6.1.4.1.38016.14.9.8.2.1.5 from snmp agent of device at specific interval.
+Device solarHVLVversion is sent to device application
+
+"""
+# ######################################################################
+# Function: check_m2000_inventory_solar_hvlv_ver_invent
+#
+# Parameters: info (SNMP Ouput) params (No Parameters)
+#
+# Output: device inventory_solar_hvlv_ver
+# ######################################################################
+m2000_inventory_solar_hvlv_ver_default_levels = ()
+
+def check_m2000_inventory_solar_hvlv_ver_invent(item, params, info):
+    """
+            check_m2000_inventory_solar_hvlv_ver_invent function fetches the solarHVLVversion
+
+            Args:
+                    item (str) Specific item on SNMP output on which we want to filter results
+
+            Kwargs:
+                    params (tuple) Check parameters for critical and warning state of service
+
+            Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+                                        3: unknown
+                        infotext(string):
+                                    plugin output
+                                    Example : OK - ;;;;
+
+                        Raises:
+                               Exception
+    """
+    state = 3
+    infotext = "unknown_value"
+    perf_data = ['']
+    try:
+        state = 0
+        for line in info:
+            index= index + 1
+            m2000_inventory_solar_hvlv_ver  = line[0]
+            try :
+                m2000_inventory_solar_hvlv_ver = float(info[0][0])
+            except Exception,e:
+                m2000_inventory_solar_hvlv_ver = str(info[0][0].replace(" ","@"))
+            perf_data.append(("m2000_inventory_solar_hvlv_ver_%d" %index,m2000_inventory_solar_hvlv_ver))
+            infotext = "m2000_inventory_solar_hvlv_ver" % m2000_inventory_solar_hvlv_ver
+    except Exception,e:
+        infotext = "unknown_value"
+    return (state,infotext,perf_data)
+
+
+
+
+# This check works on all SNMP hosts
+"""
+    Dictionary-based declaration of all check types
+"""
+check_info["m2000_inventory_solar_hvlv_ver_invent"] = {
+    'check_function':          check_m2000_inventory_solar_hvlv_ver_invent,
+    'service_description':     'm2000_inventory_solar_hvlv_ver_invent',
+    'has_perfdata':		True,
+}
+
+#########################################################################
+#	SNMP OID for the device solarHVLVversion
+#########################################################################
+snmp_info["m2000_inventory_solar_hvlv_ver_invent"] = ('.1.3.6.1.4.1.38016.14.9.8.2.1', ['5.0'])

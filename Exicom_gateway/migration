@@ -1,0 +1,107 @@
+ ############### Migration script ##########################################
+#
+#
+
+#wimax topology mongo migration ###############################
+*/5 * * * * /usr/bin/python nocout/performance/service/wimax_topology_discover.py 2>&1
+ # >>/omd/sites/ospf1_slave_1/nocout/logs/logs_wimax.txt 2>&1 
+##
+###wimax topology mysql migration
+2-59/5 * * * * /usr/bin/python nocout/performance/service/wimax_migration.py 2>&1 
+# >>/omd/sites/ospf1_slave_1/nocout/logs/log_mysql.txt  2>&1
+#
+
+*/5 * * * * /usr/bin/python nocout/firmware_update/firmware_update.py >> /omd/sites/ospf1_slave_1/logsfiles/firmware_update.log 2>&1
+* * * * * /usr/bin/python nocout/bulkconfig/start_bulkconfig.py 2>&1
+*/5 * * * * /usr/bin/python nocout/resync/resync.py >> /omd/sites/ospf1_slave_1/logsfiles/resync.log 2>&1
+
+
+*/5 * * * * /usr/bin/python nocout/performance/service/rrd_migration.py  2>&1  && /usr/bin/python nocout/performance/service/migrations.py  2>&1  && /usr/bin/python nocout/status/service/service_status_migrations.py  2>&1 
+#>> /omd/sites/ospf1_slave_1/logsfiles/rrd_migration.log /omd/sites/ospf1_slave_1/logsfiles/migrations.log /omd/sites/ospf1_slave_1/logsfiles/service_status_migrations.log
+####*/2 * * * * /usr/bin/python nocout/performance/service/rrd_migration.py & /usr/bin/python nocout/performance/service/migrations.py  
+
+#2-59/2 * * * * /usr/bin/python nocout/performance/service/migrations.py
+
+#2-59/2 * * * * /usr/bin/python nocout/status/service/service_status_migrations.py 2>&1 >>  /omd/sites/ospf1_slave_1/logsfiles/service_status_migrations.log
+#
+0 22 * * * /usr/bin/python sync_api.py >> /omd/sites/ospf1_slave_1/logsfiles/sync_api.log 2>&1
+0 * * * * /usr/bin/python nocout/performance/interface/interface_rrd_migration.py 2>&1
+ # >>/omd/sites/ospf1_slave_1/nocout/logs/interface_rrd_migration.txt
+1 * * * * /usr/bin/python nocout/performance/interface/interface_migrations.py 2>&1 
+# >>/omd/sites/ospf1_slave_1/nocout/logs/interface_migrations.txt
+1 * * * * /usr/bin/python nocout/status/interface/interface_status_migrations.py 2>&1 
+# >>/omd/sites/ospf1_slave_1/nocout/logs/interface_status_migrations.txt
+#
+#
+*/1 * * * * /usr/bin/python nocout/events/events_rrd_migration.py 2>&1
+*/2 * * * * /usr/bin/python nocout/events/events_migrations.py 2>&1
+#
+#
+0 */6 * * * /usr/bin/python nocout/performance/inventory/inventory_rrd_migration.py 2>&1
+0 */6 * * * /usr/bin/python nocout/performance/inventory/inventory_migrations.py 2>&1
+0 */6 * * * /usr/bin/python nocout/status/inventory/inventory_status_migrations.py 2>&1
+#
+#
+#
+#wimax topology mongo migration ###############################
+#*/10 * * * * /usr/bin/python nocout/performance/service/wimax_topology_discover.py 2>&1
+#
+##wimax topology mysql migration
+#7-59/10 * * * * /usr/bin/python nocout/performance/service/wimax_migration.py 2>&1
+
+######################################################### AGGREGATION ##################################################################################################
+## Bihourly scripts
+29-59/30 * * * * /usr/bin/python nocout/performance/service/aggregation_all.py -r mongodb -t 0.5 -f half_hourly -s network_perf -d performance_performanceservice_half_hourly
+29-59/30 * * * * /usr/bin/python nocout/performance/service/aggregation_all.py -r mongodb -t 0.5 -f half_hourly -s service_perf -d performance_performanceservice_half_hourly
+#
+## Hourly scripts
+58 * * * * /usr/bin/python nocout/performance/service/aggregation_all.py -r mysql -t 1 -f hourly -s performance_performanceservice_half_hourly -d performance_performanceservice_hourly
+58 * * * * /usr/bin/python nocout/performance/service/aggregation_all.py -r mysql -t 1 -f hourly -s performance_performanceservice_half_hourly -d performance_performanceservice_hourly
+#
+## Daily scripts
+0 23 * * * /usr/bin/python nocout/performance/service/aggregation_all.py -r mysql -t 24 -f daily -s performance_performanceservice_hourly -d performance_performanceservice_daily
+0 23 * * * /usr/bin/python nocout/performance/service/aggregation_all.py -r mysql -t 24 -f daily -s performance_performanceservice_hourly -d performance_performanceservice_daily
+
+#### status daily---
+30 0 * * * /usr/bin/python nocout/performance/interface/mongo_aggregation_freq_based_base.py -t 24 -f daily -s status_perf -d interface_perf_daily #  >>/omd/sites/ospf1_slave_1/nocout/logs/mongo_aggregation_freq_based_base_status_perf_to_interface_perf_daily.txt
+40 0 * * * /usr/bin/python nocout/performance/service/historical_mongo_to_mysql.py -t 24 -s interface_perf_daily -d performance_performanceservice_daily # >>/omd/sites/ospf1_slave_1/nocout/logs/historical_mongo_to_mysql_status_daily_mysql.txt
+
+## inventory daily
+0 00 * * * /usr/bin/python nocout/performance/inventory/inventory_mongo_aggregation_daily.py
+
+
+#
+## Weekly scripts
+0 23 * * 0 /usr/bin/python nocout/performance/service/aggregation_all.py -r mysql -t 168 -f weekly -s performance_performanceservice_daily -d performance_performanceservice_weekly
+0 23 * * 0 /usr/bin/python nocout/performance/service/aggregation_all.py -r mysql -t 168 -f weekly -s performance_performanceservice_daily -d performance_performanceservice_weekly
+
+
+## monthly
+0 23 28-31 * * [ "$(/bin/date +\%d -d tomorrow)" = "01" ] && /usr/bin/python nocout/performance/service/aggregation_all.py -r mysql -t 720 -f monthly -s performance_performanceservice_weekly -d performance_performanceservice_monthly
+0 23 28-31 * * [ "$(/bin/date +\%d -d tomorrow)" = "01" ] && /usr/bin/python nocout/performance/service/aggregation_all.py -r mysql -t 720 -f monthly -s performance_performanceservice_weekly -d performance_performanceservice_monthly
+0 23 28-31 * * [ "$(/bin/date +\%d -d tomorrow)" = "01" ] && /usr/bin/python nocout/performance/service/aggregation_all.py -r mysql -t 720 -f monthly -s performance_performanceinventory_weekly -d performance_performanceinventory_monthly
+0 23 28-31 * * [ "$(/bin/date +\%d -d tomorrow)" = "01" ] && /usr/bin/python nocout/performance/service/aggregation_all.py -r mysql -t 720 -f monthly -s performance_performanceservice_weekly -d performance_performanceservice_monthly
+
+#status weekly
+0 23 * * 0 /usr/bin/python nocout/performance/service/aggregation_all.py -r mysql -t 168 -f weekly -s performance_performanceservice_daily -d performance_performanceservice_weekly
+
+# inventory weekly
+0 23 * * 0 /usr/bin/python nocout/performance/interface/mongo_aggregation_freq_based_base.py -t 168 -f weekly -s nocout_inventory_service_perf_data -d inventory_perf_weekly
+5 23 * * 0 /usr/bin/python nocout/performance/service/historical_mongo_to_mysql.py -t 168 -s inventory_perf_weekly -d performance_performanceinventory_weekly
+#
+#
+
+## Events Aggregations
+#
+## Daily
+#5 23 * * * /usr/bin/python nocout/events/events_aggregation_base.py -t 24 -f daily -s nocout_host_event_log -d performance_eventnetworkdaily
+#5 23 * * * /usr/bin/python nocout/events/events_aggregation_base.py -t 24 -f daily -s nocout_service_event_log -d performance_eventservicedaily
+#
+## Weekly 
+#5 23 * * 0 /usr/bin/python nocout/events/events_aggregation_all.py -t 168 -f weekly -s performance_eventnetworkdaily -d performance_eventnetworkweekly
+#5 23 * * 0 /usr/bin/python nocout/events/events_aggregation_all.py -t 168 -f weekly -s performance_eventservicedaily -d performance_eventserviceweekly
+
+2 00 * * * sh nocout/inventorization.sh
+#mongo clean
+30 3 * * 0 /usr/bin/python nocout/utils/mongodb_clean_migration.py >> /omd/sites/ospf1_slave_1/nocout/logs/mongodb_clean_migration.txt
+

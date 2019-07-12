@@ -1,0 +1,85 @@
+#!/usr/bin/python
+import binascii
+"""
+vlan Poller script.
+This is part of device application. 
+Poller script determines the vlan. 
+poller script takes the snmp value of OID .1.3.6.1.4.1.161.19.3.2.1.55.0 from snmp agent of device at specific interval.
+all ports status are sent to device application 
+"""
+# ######################################################################
+# Function : check_exicom_model_no_invent
+#
+# Parameters: info (SNMP Output) _no_params(No Parameters)
+#
+# Output: service state and plugin output
+# #####################################################################
+solar_recstatus_dict ={
+0:'commFail',
+1:'ok',
+2:'fail',
+3:'overVoltage',
+4:'fanFail',
+5:'disabled',
+6:'safeMode',
+7:'overLoad',
+8:'highTemp',
+9:'acHigh',
+10:'freqAbnormal',
+11:'gridAbnormal',
+12:'inputVoltDerate',
+13:'tempDerate',
+14:'outputVoltDerate',
+15:'currentLimit',
+16:'underVoltage'
+}
+def check_solarindiv_recstatus(item, _no_params, info):
+    """
+                check_exicom_model_no_invent function calculates vlan
+
+                Args:
+                        item (str) Specific item on SNMP output on which we want to filter results
+                
+                Kwargs:
+                        params (tuple) Check parameters for critical and warning state of service
+
+                Returns:
+                        state (int) :
+                                        0 : OK
+                                        1 : Warning
+                                        2: Critical
+                    3: unknown
+                        infotext(string):
+                                        plugin output
+                                        Example : OK - vlan=1;;;;
+
+                        Raises:
+                               Exception
+    """
+    state = 3
+    infotext = "unknown_value"
+    recstatus= None
+    index =0
+    perfdata = []
+    try:
+        for line in info:
+            index= index + 1
+            recstatus = int(line[0])
+            recstatus_bit = int(line[0])
+	    recstatus  = solar_recstatus_dict.get(recstatus,None)
+            state = 0
+            perfdata.append(("solar_%d_rec_status" %index,recstatus))
+	    perfdata.append(("solar_%d_rec_status_bit" %index,recstatus_bit))
+            infotext = "solar_rec_status=%s" % recstatus
+	    
+    except Exception,e:
+        infotext = "unknown_value"
+    return (state,infotext,perfdata)
+
+check_info["solarindiv_recstatus"] = {
+    'check_function':          check_solarindiv_recstatus,
+    'service_description':     'solarindiv_recstatus',
+    'has_perfdata':         True,
+    'snmp_info':               ('.1.3.6.1.4.1.38016.14.10.6', ['1.3']),
+    'snmp_scan_function':      lambda oid: "m1000" in oid(".1.3.6.1.4.1.38016.14.1.1.0").lower(),
+}
